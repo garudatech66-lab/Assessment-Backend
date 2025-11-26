@@ -2,6 +2,8 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import mysql.connector
 import json
+import openpyxl
+
 
 app = Flask(__name__)
 
@@ -26,6 +28,52 @@ def get_db_connection():
 # -----------------------------
 # API Endpoint to Receive Answers
 # -----------------------------
+@app.route('/login', methods=['POST'])
+def login():
+    try:
+        data = request.get_json(force=True)
+
+        username = data.get("username")
+        password = data.get("password")
+
+        if not username or not password:
+            return jsonify({"status": "error", "message": "Username & password required"}), 400
+
+        # Load Excel file
+        workbook = openpyxl.load_workbook("./usersdata.xlsx")
+        sheet = workbook.active
+
+        # Find user
+        user_found = False
+        correct_password = None
+
+        for row in sheet.iter_rows(min_row=2, values_only=True):  
+            print(row)
+            excel_username = str(row[7]).strip()  # Column H
+            excel_password = str(row[8]).strip()  # Column I
+            # print(excel_username, excel_password, username, password)
+            if username == excel_username:
+                user_found = True
+                correct_password = excel_password
+                break
+
+        if not user_found:
+            return jsonify({"status": "error", "message": "User not found"}), 404
+
+        if password != correct_password:
+            return jsonify({"status": "error", "message": "Invalid password"}), 401
+
+        return jsonify({
+            "status": "success",
+            "message": "Login successful",
+            "user": username,
+            "token": "dummy-jwt-token"
+        }), 200
+
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
 @app.route('/submit', methods=['POST'])
 def submit_answers():
     try:
