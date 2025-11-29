@@ -18,12 +18,19 @@ CORS(app, resources={r"/*": {"origins": "*"}})
 # MySQL Connection Function
 # -----------------------------
 def get_db_connection():
-    return mysql.connector.connect(
+     return mysql.connector.connect(
         host="localhost",
         user="root",          # your MySQL username
         password="Thulasi@123", # your MySQL password
         database="mydb"    # your database name
     )
+    # local testing
+    # return mysql.connector.connect(
+    #     host="localhost",
+    #     user="root",          # your MySQL username
+    #     password="Thulasi@123", # your MySQL password
+    #     database="mydb"    # your database name
+    # )
 
 # -----------------------------
 # API Endpoint to Receive Answers
@@ -61,6 +68,7 @@ def login():
             return jsonify({"status": "error", "message": "User not found"}), 404
 
         if password != correct_password:
+            print(password, correct_password)
             return jsonify({"status": "error", "message": "Invalid password"}), 401
 
         return jsonify({
