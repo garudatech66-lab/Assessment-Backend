@@ -4,6 +4,20 @@ import mysql.connector
 import json
 import openpyxl
 
+from pymongo import MongoClient
+import os
+
+# Connect to MongoDB
+mongo_url = os.getenv("MONGO_URL")
+mongo_db = os.getenv("MONGO_DB", "examdb")
+mongo_collection = os.getenv("MONGO_COLLECTION", "students_answers")
+
+client = MongoClient(mongo_url)
+db = client[mongo_db]
+collection = db[mongo_collection]
+
+
+
 
 app = Flask(__name__)
 
@@ -98,21 +112,28 @@ def submit_answers():
             return jsonify({"status": "error", "message": "No answers found in request"}), 400
 
         # Convert answers to JSON string for storage
-        answers_json = json.dumps(answers, ensure_ascii=False)
+        # answers_json = json.dumps(answers, ensure_ascii=False)
 
-        db = get_db_connection()
-        cursor = db.cursor()
+        # db = get_db_connection()
+        # cursor = db.cursor()
 
-        query = """
-            INSERT INTO students_answers (student_id, answers_json)
-            VALUES (%s, %s)
-        """
+        # query = """
+        #    INSERT INTO students_answers (student_id, answers_json)
+        #    VALUES (%s, %s)
+        # """
 
-        cursor.execute(query, (student_id, answers_json))
-        db.commit()
+        # cursor.execute(query, (student_id, answers_json))
+        # db.commit()
 
-        cursor.close()
-        db.close()
+        # cursor.close()
+        # db.close()
+
+        # Insert into MongoDB
+        record = {
+            "student_id": student_id,
+            "answers": answers
+        }
+        result = collection.insert_one(record)
 
         return jsonify({"status": "success", "message": "Answers saved!"}), 201
 
@@ -127,3 +148,4 @@ def submit_answers():
 # -----------------------------
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
+
