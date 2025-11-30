@@ -100,6 +100,13 @@ def login():
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
+
+@app.route('/clearDBData', methods=['DELETE'])
+def clear_db_data():
+    result = collection.delete_many({})
+    return {"message": "Collection cleared", "deleted_count": result.deleted_count}, 200
+
+
 @app.route('/download-pdf')
 def download_pdf():
     data = list(collection.find({}, {"_id": 0}))
@@ -182,6 +189,7 @@ def submit_answers():
 # -----------------------------
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
+
 
 
 
