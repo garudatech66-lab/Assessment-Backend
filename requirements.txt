@@ -2,7 +2,8 @@ Flask
 flask-cors
 mysql-connector-python
 python-dotenv
-
+reportlab
 openpyxl
 pymongo
 pymongo[srv]
+
