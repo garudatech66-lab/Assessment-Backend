@@ -8,6 +8,8 @@ from pymongo import MongoClient
 import os
 
 from reportlab.pdfgen import canvas
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet
 from io import BytesIO
 
 # Connect to MongoDB
@@ -100,39 +102,32 @@ def login():
 
 @app.route('/download-pdf')
 def download_pdf():
-    # Retrieve data from MongoDB
-    data = list(collection.find({}, {"_id": 0}))  # remove _id from output
-    
-    # Create PDF in memory
-    pdf_buffer = BytesIO()
-    pdf = canvas.Canvas(pdf_buffer)
+    data = list(collection.find({}, {"_id": 0}))
 
-    pdf.setFont("Helvetica", 12)
-    y = 800  # starting position on page
-    
-    pdf.drawString(50, y, "MongoDB Data Export")
-    y -= 30
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer)
+    styles = getSampleStyleSheet()
+    elements = []
 
-    # Write each document
-    for doc in data:
-        line = ", ".join([f"{k}: {v}" for k, v in doc.items()])
-        pdf.drawString(50, y, line)
-        y -= 20
-        if y < 50:      # new page
-            pdf.showPage()
-            pdf.setFont("Helvetica", 12)
-            y = 800
+    # Title
+    elements.append(Paragraph("MongoDB Data Export", styles['Title']))
+    elements.append(Spacer(1, 20))
 
-    pdf.save()
-    pdf_buffer.seek(0)
+    # Add each document nicely formatted
+    for record in data:
+        formatted = "<br/>".join([f"<b>{k}</b>: {v}" for k, v in record.items()])
+        elements.append(Paragraph(formatted, styles['Normal']))
+        elements.append(Spacer(1, 12))
+
+    doc.build(elements)
+    buffer.seek(0)
 
     return send_file(
-        pdf_buffer,
+        buffer,
         download_name="data.pdf",
         as_attachment=True,
         mimetype="application/pdf"
     )
-
 
 @app.route('/submit', methods=['POST'])
 def submit_answers():
@@ -187,5 +182,6 @@ def submit_answers():
 # -----------------------------
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
+
 
 
